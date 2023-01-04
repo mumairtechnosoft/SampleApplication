@@ -1,0 +1,16 @@
+﻿@model Feedback360.Models.Models.Account.Request.LoginRequestDTO
+
+<div class="container mt-5">
+    <form autocomplete="off" asp-route="Login">
+        <input type="hidden" asp-for="ReturnUrl" />
+        <div class="">
+            <input type="text" class="form-control form-control-sm" placeholder="Username" asp-for="Username" autofocus>
+            <br />
+            <input type="password" class="form-control form-control-sm form-control-last" placeholder="Password" asp-for="Password">
+        </div>
+        <p>
+            <button type="submit" class="btn btn-dark btn-block mt-3">Login</button>
+        </p>
+    </form>
+</div>
+
