@@ -29,6 +29,7 @@ namespace SampleApplication.Common
                     ClientSecret = "postman-secret",
                     DisplayName = "Postman",
                     RedirectUris = { new Uri("http://localhost:4200/login") },
+                    PostLogoutRedirectUris = { new Uri("http://localhost:4200/home")},
                     Permissions =
                     {
                         OpenIddictConstants.Permissions.Endpoints.Authorization,
@@ -36,6 +37,30 @@ namespace SampleApplication.Common
 
                         OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
                         OpenIddictConstants.Permissions.GrantTypes.ClientCredentials,
+                        OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+
+                        OpenIddictConstants.Permissions.Prefixes.Scope + "api",
+                        OpenIddictConstants.Permissions.ResponseTypes.Code
+                    }
+                }, cancellationToken);
+            }
+
+            if (await manager.FindByClientIdAsync("openid", cancellationToken) is null)
+            {
+                await manager.CreateAsync(new OpenIddictApplicationDescriptor
+                {
+                    ClientId = "openid",
+                    ClientSecret = "openid-secret",
+                    DisplayName = "OpenIddict",
+                    RedirectUris = { new Uri("http://localhost:4200/login") },
+                    PostLogoutRedirectUris = { new Uri("http://localhost:4200") },
+                    Permissions =
+                    {
+                        OpenIddictConstants.Permissions.Endpoints.Authorization,
+                        OpenIddictConstants.Permissions.Endpoints.Logout,
+                        OpenIddictConstants.Permissions.Endpoints.Token,
+
+                        OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
                         OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
 
                         OpenIddictConstants.Permissions.Prefixes.Scope + "api",

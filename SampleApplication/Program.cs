@@ -6,12 +6,18 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using OpenIddict.Abstractions;
+using OpenIddict.Validation.AspNetCore;
 using SampleApplication.Common;
 using SampleApplication.Mapping;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+})
         .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options => {
             options.LoginPath = "/accounts/login";
         });
@@ -36,13 +42,22 @@ builder.Services.AddOpenIddict()
             .AllowRefreshTokenFlow();
         options.SetAuthorizationEndpointUris("/connect/authorize")
             .SetTokenEndpointUris("/connect/token")
-            .SetUserinfoEndpointUris("/connect/userinfo");
+            .SetUserinfoEndpointUris("/connect/userinfo")
+            .SetLogoutEndpointUris("/connect/logout");
         options.AddEphemeralEncryptionKey().AddEphemeralSigningKey();
         options.RegisterScopes("openid", OpenIddictConstants.Scopes.Roles);
         options.UseAspNetCore()
             .EnableTokenEndpointPassthrough()
             .EnableAuthorizationEndpointPassthrough()
-            .EnableUserinfoEndpointPassthrough();
+            .EnableUserinfoEndpointPassthrough()
+            .EnableLogoutEndpointPassthrough();
+    }).AddValidation(options =>
+    {
+        // Import the configuration from the local OpenIddict server instance.
+        options.UseLocalServer();
+
+        // Register the ASP.NET Core host.
+        options.UseAspNetCore();
     });
 builder.Services.AddHostedService<TestData>();
 
@@ -75,12 +90,13 @@ builder.Services.AddScoped<IFeedbacksService, FeedbacksService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 #region SeriLog
-//var logger = new LoggerConfiguration()
-//    .ReadFrom.Configuration(builder.Configuration)
-//    .Enrich.FromLogContext()
-//    .CreateLogger;
-//builder.Logging.ClearProviders();
-//builder.Logging.AddSerilog(logger);
+var logger = new LoggerConfiguration()
+  .ReadFrom.Configuration(builder.Configuration)
+  .Enrich.FromLogContext()
+  .CreateLogger();
+
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog(logger);
 #endregion
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -88,30 +104,30 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Feedback360.Api", Version = "v1" });
-    //c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
-    //{
-    //    Name = "Authorization",
-    //    Type = SecuritySchemeType.ApiKey,
-    //    Scheme = "Bearer",
-    //    BearerFormat = "OpenIddict",
-    //    In = ParameterLocation.Header,
-    //    Description = "OpenIddict Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 12345abcdef\"",
-    //});
-    //c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    //            {
-    //                {
-    //                      new OpenApiSecurityScheme
-    //                        {
-    //                            Reference = new OpenApiReference
-    //                            {
-    //                                Type = ReferenceType.SecurityScheme,
-    //                                Id = "Bearer"
-    //                            }
-    //                        },
-    //                        new string[] {}
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "OpenIddict",
+        In = ParameterLocation.Header,
+        Description = "OpenIddict Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 12345abcdef\"",
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                          new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id = "Bearer"
+                                }
+                            },
+                            new string[] {}
 
-    //                }
-    //            });
+                    }
+                });
 });
 
 var app = builder.Build();

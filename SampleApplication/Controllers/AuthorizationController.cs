@@ -111,5 +111,18 @@ namespace SampleApplication.Controllers
                 sub = claimsPrincipal.GetClaim(OpenIddictConstants.Claims.Subject)
             });
         }
+
+        [HttpGet("~/Connect/Logout"), Produces("application/json")]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+
+            return SignOut(
+                authenticationSchemes: CookieAuthenticationDefaults.AuthenticationScheme,
+                properties: new AuthenticationProperties
+                {
+                    RedirectUri = "/"
+                });
+        }
     }
 }
