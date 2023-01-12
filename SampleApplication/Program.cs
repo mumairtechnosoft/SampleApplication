@@ -9,6 +9,7 @@ using OpenIddict.Abstractions;
 using OpenIddict.Validation.AspNetCore;
 using SampleApplication.Common;
 using SampleApplication.Mapping;
+using SampleApplication.Models;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -65,7 +66,7 @@ builder.Services.AddCors(option =>
 {
     option.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:4200")
+        builder.WithOrigins("http://localhost:4200", "http://localhost:7259/")
         .SetIsOriginAllowedToAllowWildcardSubdomains()
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -84,7 +85,7 @@ var mapperConfig = new MapperConfiguration(mc =>
 IMapper mapper = mapperConfig.CreateMapper();
 #endregion
 
-
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 builder.Services.AddSingleton(mapper);
 builder.Services.AddScoped<IFeedbacksService, FeedbacksService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -141,7 +142,10 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseSwagger();
-app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Feedback360.Api v1"));
+app.UseSwaggerUI(c => {
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Feedback360.Api v1");
+    c.RoutePrefix = string.Empty;
+    });
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

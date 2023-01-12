@@ -30,13 +30,14 @@ namespace Feedback360.Services.Services.Feedbacks
             feedback.Deleted = false;
             _context.Feedbacks.Add(feedback);
             await _context.SaveChangesAsync();
-            return GenericResponse<bool>.Success(true, "Added Successfully!");
+            return GenericResponse<bool>.Failure("Added Successfully!", ApiStatusCode.RecordNotFound);
         }
 
         public async Task<GenericResponse<List<FeedbackListResponseDTO>>> GetAllFeedbacksAsync()
         {
             List<FeedbackListResponseDTO> list = new List<FeedbackListResponseDTO>();
             var listOfFeedbacks = await _context.Feedbacks.ToListAsync();
+            var users = await _context.Users.ToListAsync();
 
             if (listOfFeedbacks.Count > 0)
             {
@@ -51,7 +52,7 @@ namespace Feedback360.Services.Services.Feedbacks
                             Modified_Date = feedback.Modified_Date,
                             Status = feedback.Status,
                             Comments = feedback.Comments
-                        }).ToList();
+                        }).OrderByDescending(x => x.Id).ToList();
             }
 
             return GenericResponse<List<FeedbackListResponseDTO>>.Success(list, "Data Successfully Retreived!");
