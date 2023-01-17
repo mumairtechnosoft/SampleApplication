@@ -23,6 +23,9 @@ namespace Feedback360.Functions
             {
                 options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+            }).AddCookie(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme).Services.AddOpenIddict().AddValidation(options =>
+            {
+                options.UseLocalServer();
             });
 
             builder.Services.AddDbContext<DbHelperContext>(
@@ -32,20 +35,20 @@ namespace Feedback360.Functions
                     options.UseOpenIddict();
                 });
 
-            builder.Services.AddOpenIddict()
-    .AddCore(options =>
-    {
-        options.UseEntityFrameworkCore()
-            .UseDbContext<ApplicationDbContext>();
-    })
-    .AddValidation(options =>
-    {
-        // Import the configuration from the local OpenIddict server instance.
-        options.UseLocalServer();
+    //        builder.Services.AddOpenIddict()
+    //.AddCore(options =>
+    //{
+    //    options.UseEntityFrameworkCore()
+    //        .UseDbContext<ApplicationDbContext>();
+    //})
+    //.AddValidation(options =>
+    //{
+    //    // Import the configuration from the local OpenIddict server instance.
+    //    options.UseLocalServer();
 
-        // Register the ASP.NET Core host.
-        options.UseAspNetCore();
-    });
+    //    // Register the ASP.NET Core host.
+    //    options.UseAspNetCore();
+    //});
 
             builder.AddAuthorization();
             builder.AddSwashBuckle(Assembly.GetExecutingAssembly(), opts =>
